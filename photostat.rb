@@ -4,6 +4,8 @@ require 'rubygems'
 require 'exifr'
 require 'optparse'
 require 'ostruct'
+require 'csv'
+
 require 'pp'
 
 
@@ -30,19 +32,19 @@ class Photostat
       @exifdata = Hash.new
        exif = EXIFR::JPEG.new(file)
         if exif.exif? 
-            @exifdata[:model] = exif.mode 
-            @exifdata[:exposure_program] = EXPOSURE_PROGRAMS[exif.exposure_program] unless exif.mode = nil
-            @exifdata[:exposure_time] = exif.exposure_time.to_s unless exif.mode = nil
+            @exifdata[:file] = file
+            @exifdata[:date] = exif.date_time_original.strftime("%d.%m.%Y")
+            @exifdata[:time] = exif.date_time_original.strftime("%k:%M")
+            @exifdata[:model] = exif.model 
+            @exifdata[:exposure_program] = EXPOSURE_PROGRAMS[exif.exposure_program] 
             @exifdata[:f_number] = exif.f_number.to_f
+            @exifdata[:exposure_time] = exif.exposure_time.to_s 
             @exifdata[:exposure_bias] = exif.exposure_bias_value
             @exifdata[:iso] = exif.iso_speed_ratings
             @exifdata[:focal_lenght_35eq] = exif.focal_length_in_35mm_film
             @exifdata[:mettering_mode] = METTERING_MODES[exif.metering_mode]
             @exifdata[:white_balance] = WHITE_BALANCES[exif.white_balance]
             @exifdata[:light_source] = LIGHT_SOURCES[exif.light_source]
-            @exifdata[:date] = exif.date_time_original.strftime("%d.%m.%Y")
-            @exifdata[:time] = exif.date_time_original.strftime("%k:%M")
-            @exifdata[:comment] = exif.comment
         else
           exifdata = nil
         end #if
@@ -125,25 +127,20 @@ class Photostat
     @images_list = Dir.glob(images)
   end
 
-  def save_values
-#    if File.exist?(@current_directory+"/"+@output_filename)
-#      puts "File exist. Do you want delete old file (Y/n)?"
-#      yn = gets
-#    else
-      of = File.new(@current_directory+"/"+@output_filename, "a+")
-      datalinehead = "#{FIELDSEP}FILENAME#{FIELDSEP}#{DELIMITER}#{FIELDSEP}DATE#{FIELDSEP}#{DELIMITER}#{FIELDSEP}TIME#{FIELDSEP}#{DELIMITER}#{FIELDSEP}MODEL#{FIELDSEP}#{DELIMITER}#{FIELDSEP}PROGRAM#{FIELDSEP}#{DELIMITER}#{FIELDSEP}EXPOSURE_TIME#{FIELDSEP}#{DELIMITER}#{FIELDSEP}APERTURE#{FIELDSEP}#{DELIMITER}#{FIELDSEP}ISO#{FIELDSEP}#{DELIMITER}#{FIELDSEP}EXPOSURE_COMPENSATION#{FIELDSEP}#{DELIMITER}#{FIELDSEP}METTERING_MODE#{FIELDSEP}#{DELIMITER}#{FIELDSEP}FOCAL_DISTANCE_35MM#{FIELDSEP}#{DELIMITER}#{FIELDSEP}WHITE_BALANCE#{FIELDSEP}#{DELIMITER}#{FIELDSEP}WB_LIGHT_SOURCE#{FIELDSEP}\x0A"
-      of.write(datalinehead)
+  def save_csv
+    CSV.open(@current_directory+"/"+@output_filename, "wb", :col_sep => ',' ) do |csv_file|
+      firstline = true
       images_list.each do |file|
-        puts "reading Exif from #{file}" if @options.verbose
         image = Exif.new(file)
         image.get_exif(file)
-        dataline = "#{FIELDSEP}#{file}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:date]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:time]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:model]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:exposure_program]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:exposure_time]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:f_number]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:iso]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:exposure_bias]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:mettering_mode]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:focal_lenght_35eq]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:white_balance]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:light_source]}#{FIELDSEP}\x0A"
-        of.write(dataline)
+        csv_file << image.exifdata.keys if firstline   #header
+        csv_file << image.exifdata.values
+        firstline = false
       end
-      of.close
-#    end
+    end
   end
+
   
   photostat = Photostat.new
-  photostat.save_values
+  photostat.save_csv
 end
