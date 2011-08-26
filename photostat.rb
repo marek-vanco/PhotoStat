@@ -28,25 +28,21 @@ class Photostat
    
     def get_exif(file)
       @exifdata = Hash.new
-        exif = EXIFR::JPEG.new(file)
+       exif = EXIFR::JPEG.new(file)
         if exif.exif? 
-          begin
-            @exifdata["model"] = exif.model
-            @exifdata["exposure_program"] = EXPOSURE_PROGRAMS[exif.exposure_program]
-            @exifdata["exposure_time"] = exif.exposure_time.to_s
-            @exifdata["f_number"] = exif.f_number.to_f
-            @exifdata["exposure_bias"] = exif.exposure_bias_value
-            @exifdata["iso"] = exif.iso_speed_ratings
-            @exifdata["focal_lenght_35eq"] = exif.focal_length_in_35mm_film
-            @exifdata["mettering_mode"] = METTERING_MODES[exif.metering_mode]
-            @exifdata["white_balance"] = WHITE_BALANCES[exif.white_balance]
-            @exifdata["light_source"] = LIGHT_SOURCES[exif.light_source]
-            @exifdata["date"] = exif.date_time_original.strftime("%d.%m.%Y")
-            @exifdata["time"] = exif.date_time_original.strftime("%k:%M")
-            @exifdata["comment"] = exif.comment
-           rescue
-             exifdata = nil
-           end
+            @exifdata[:model] = exif.mode 
+            @exifdata[:exposure_program] = EXPOSURE_PROGRAMS[exif.exposure_program] unless exif.mode = nil
+            @exifdata[:exposure_time] = exif.exposure_time.to_s unless exif.mode = nil
+            @exifdata[:f_number] = exif.f_number.to_f
+            @exifdata[:exposure_bias] = exif.exposure_bias_value
+            @exifdata[:iso] = exif.iso_speed_ratings
+            @exifdata[:focal_lenght_35eq] = exif.focal_length_in_35mm_film
+            @exifdata[:mettering_mode] = METTERING_MODES[exif.metering_mode]
+            @exifdata[:white_balance] = WHITE_BALANCES[exif.white_balance]
+            @exifdata[:light_source] = LIGHT_SOURCES[exif.light_source]
+            @exifdata[:date] = exif.date_time_original.strftime("%d.%m.%Y")
+            @exifdata[:time] = exif.date_time_original.strftime("%k:%M")
+            @exifdata[:comment] = exif.comment
         else
           exifdata = nil
         end #if
@@ -141,7 +137,7 @@ class Photostat
         puts "reading Exif from #{file}" if @options.verbose
         image = Exif.new(file)
         image.get_exif(file)
-        dataline = "#{FIELDSEP}#{file}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["date"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["time"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["model"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["exposure_program"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["exposure_time"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["f_number"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["iso"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["exposure_bias"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["mettering_mode"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["focal_lenght_35eq"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["white_balance"]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata["light_source"]}#{FIELDSEP}\x0A"
+        dataline = "#{FIELDSEP}#{file}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:date]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:time]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:model]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:exposure_program]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:exposure_time]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:f_number]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:iso]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:exposure_bias]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:mettering_mode]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:focal_lenght_35eq]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:white_balance]}#{FIELDSEP}#{DELIMITER}#{FIELDSEP}#{image.exifdata[:light_source]}#{FIELDSEP}\x0A"
         of.write(dataline)
       end
       of.close
