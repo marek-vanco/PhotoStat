@@ -30,26 +30,30 @@ class Photostat
    
     def get_exif(file)
       @exifdata = Hash.new
-       exif = EXIFR::JPEG.new(file)
-        if exif.exif? 
-            @exifdata[:file] = file
-            @exifdata[:date] = exif.date_time_original.strftime("%d.%m.%Y")
-            @exifdata[:time] = exif.date_time_original.strftime("%k:%M")
-            @exifdata[:model] = exif.model 
-            @exifdata[:exposure_program] = EXPOSURE_PROGRAMS[exif.exposure_program] 
-            @exifdata[:f_number] = exif.f_number.to_f
-            @exifdata[:exposure_time] = exif.exposure_time.to_s 
-            @exifdata[:exposure_bias] = exif.exposure_bias_value
-            @exifdata[:iso] = exif.iso_speed_ratings
-            @exifdata[:focal_lenght_35eq] = exif.focal_length_in_35mm_film
-            @exifdata[:mettering_mode] = METTERING_MODES[exif.metering_mode]
-            @exifdata[:white_balance] = WHITE_BALANCES[exif.white_balance]
-            @exifdata[:light_source] = LIGHT_SOURCES[exif.light_source]
-        else
-          exifdata = nil
-        end #if
-    end
-  end      # end class Exif 
+      exif = EXIFR::JPEG.new(file)
+      if exif.exif? 
+        #  I have a problem with  date_time_original = nil, but exif.respond_to?(:date_time_original)  is true
+        #  Need to raise an expetion `get_exif': undefined method `strftime' for nil:NilClass (NoMethodError)
+
+        @exifdata[:file] = file
+        @exifdata[:date] = exif.date_time_original.strftime("%d.%m.%Y") if exif.respond_to?("date_time_original")
+        @exifdata[:time] = exif.date_time_original.strftime("%k:%M") if exif.respond_to?("date_time_original")
+        @exifdata[:manufactor] = exif.make
+        @exifdata[:model] = exif.model 
+        @exifdata[:exposure_program] = EXPOSURE_PROGRAMS[exif.exposure_program] if exif.respond_to?("exposure_program")
+        @exifdata[:f_number] = exif.f_number.to_f
+        @exifdata[:exposure_time] = exif.exposure_time.to_s 
+        @exifdata[:exposure_bias] = exif.exposure_bias_value
+        @exifdata[:iso] = exif.iso_speed_ratings
+        @exifdata[:focal_lenght_35eq] = exif.focal_length_in_35mm_film
+        @exifdata[:metering_mode] = METTERING_MODES[exif.metering_mode] if exif.respond_to?("metering_mode")
+        @exifdata[:white_balance] = WHITE_BALANCES[exif.white_balance] if exif.respond_to?("white_balance")
+        @exifdata[:light_source] = LIGHT_SOURCES[exif.light_source] if exif.respond_to?("light_source")
+      else
+        exifdata = nil
+      end #if
+    end #end get_exif
+  end # end class Exif 
 
   class Options 
     def self.parse(args)
@@ -106,7 +110,7 @@ class Photostat
         exit 1
       end
 
-      options
+     options
 
     end #end parse
   end  # end class Options
@@ -131,6 +135,7 @@ class Photostat
     CSV.open(@current_directory+"/"+@output_filename, "wb", :col_sep => ',' ) do |csv_file|
       firstline = true
       images_list.each do |file|
+        puts "Reading exif from #{file}" if options.verbose
         image = Exif.new(file)
         image.get_exif(file)
         csv_file << image.exifdata.keys if firstline   #header
@@ -139,7 +144,6 @@ class Photostat
       end
     end
   end
-
   
   photostat = Photostat.new
   photostat.save_csv
