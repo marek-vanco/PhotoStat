@@ -129,7 +129,12 @@ class Photostat
   end
 
   def save_csv
-    CSV.open(@current_directory+"/"+@output_filename, "wb", :col_sep => ',' ) do |csv_file|
+      begin
+        csv_file = CSV.open(@current_directory+"/"+@output_filename, "wb", :col_sep => ',' ) 
+      rescue Errno::EACCES => err 
+        puts "ERROR: #{err.message}" 
+        exit 1
+      end
       firstline = true
       images_list.each do |file|
         puts "Reading exif from #{file}" if options.verbose
@@ -139,7 +144,7 @@ class Photostat
         csv_file << image.exifdata.values
         firstline = false
       end
-    end
+      csv_file.close
   end
   
   photostat = Photostat.new
