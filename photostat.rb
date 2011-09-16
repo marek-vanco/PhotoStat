@@ -5,7 +5,6 @@ require 'exifr'
 require 'optparse'
 require 'ostruct'
 require 'csv'
-
 require 'pp'
 
 
@@ -87,8 +86,6 @@ class Photostat
           puts "This is a script for creating a list of EXIF values from photos."
           puts "You must specify output filename. This script will write some photographic values from photos"
           puts "\n"
-          puts "This scrit is under GNU software licence."
-          puts "\n"
           puts opts
           exit
         end
@@ -112,13 +109,20 @@ class Photostat
     end #end parse
   end  # end class Options
 
+  def absolute_path (path)
+  end
   
   def initialize # Photostat 
     @options = Options.parse(ARGV)
-    @output_filename = options.output_filename
+    @output_filename = File.expand_path(options.output_filename)
 
     @current_directory = Dir.pwd
-    @working_directory = Dir.chdir(options.input_dir)
+    begin
+      @working_directory = Dir.chdir(options.input_dir)
+    rescue Errno::ENOENT => err
+      puts "Error: #{err.message}"
+      exit 1
+    end
 
     unless options.dir_recursive 
       images = File.join("*.{jpg,jpeg,JPG}")
@@ -126,11 +130,18 @@ class Photostat
       images = File.join("**", "*.{jpg,jpeg,JPG}") 
     end
     @images_list = Dir.glob(images)
+    puts "No photos in spedified directory: #{options.input_dir}" if @images_list.empty? 
   end
 
   def save_csv
+# Protection of hard overwrite of output filename
+#      if File.exist?(@output_filename) then
+#        puts "Filename exist: #{@output_filename}. Please select other filename"
+#        exit 1
+#      end
+
       begin
-        csv_file = CSV.open(@current_directory+"/"+@output_filename, "wb", :col_sep => ',' ) 
+        csv_file = CSV.open(@output_filename, "wb", :col_sep => ',' ) 
       rescue Errno::EACCES => err 
         puts "ERROR: #{err.message}" 
         exit 1
