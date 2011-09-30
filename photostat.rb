@@ -109,9 +109,6 @@ class Photostat
     end #end parse
   end  # end class Options
 
-  def absolute_path (path)
-  end
-  
   def initialize # Photostat 
     @options = Options.parse(ARGV)
     @output_filename = File.expand_path(options.output_filename)
