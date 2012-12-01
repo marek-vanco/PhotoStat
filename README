@@ -1,5 +1,4 @@
 This is a script for creating a list of EXIF values from photos.
-You must specify output filename. This script will create a .csv file with Exif values:
+You must specify output filename. This script will create a .csv file with EXIF values:
 
 This scrit is under GNU software licence.
-
