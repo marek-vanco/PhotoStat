@@ -1,11 +1,42 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
-require 'exifr'
-require 'optparse'
-require 'ostruct'
-require 'csv'
-require 'pp'
+
+begin
+	require 'rubygems'
+rescue LoadError => error
+	puts error
+	abort "Please install ruby gem rubygems"
+end
+
+begin
+	require 'exifr'
+rescue LoadError => error
+	puts error
+	abort "Please install ruby gem exifr"
+end
+
+begin
+	require 'optparse'
+rescue LoadError => error
+	puts error
+	abort "Please install ruby gem optparse"
+end
+
+begin
+	require 'ostruct'
+rescue LoadError => error
+	puts error
+	abort "Please install ruby gem ostruct"
+end
+
+begin
+	require 'csv'
+rescue LoadError => error
+	puts error
+	abort "Please install ruby gem csv"
+end
+
+#require 'pp' # for debuging
 
 
 VERSION =  "Photostat ver 0.1"
