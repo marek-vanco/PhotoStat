@@ -1,45 +1,52 @@
 #!/usr/bin/env ruby
 
+# This is a script for creating a list of EXIF values from photos.
+# You must specify output filename. This script will create a .csv file with EXIF values:
+# 
+# This script is under GNU software licence.
+#
+# Author: alpyapple@gmail.com
+# source: git://github.com/marek-vanco/PhotoStat.git
 
 begin
 	require 'rubygems'
 rescue LoadError => error
 	puts error
-	abort "Please install ruby gem rubygems"
+	abort "Please install gem install rubygems"
 end
 
 begin
 	require 'exifr'
 rescue LoadError => error
 	puts error
-	abort "Please install ruby gem exifr"
+	abort "Please install gem install exifr"
 end
 
 begin
 	require 'optparse'
 rescue LoadError => error
 	puts error
-	abort "Please install ruby gem optparse"
+	abort "Please install gem install optparse"
 end
 
 begin
 	require 'ostruct'
 rescue LoadError => error
 	puts error
-	abort "Please install ruby gem ostruct"
+	abort "Please install gem install ostruct"
 end
 
 begin
 	require 'csv'
 rescue LoadError => error
 	puts error
-	abort "Please install ruby gem csv"
+	abort "Please install gem install csv"
 end
 
 #require 'pp' # for debuging
 
 
-VERSION =  "Photostat ver 0.1"
+VERSION =  "Photostat ver 0.2"
 DELIMITER = ","
 FIELDSEP = "\""
 
@@ -144,18 +151,19 @@ class Photostat
     @options = Options.parse(ARGV)
     @output_filename = File.expand_path(options.output_filename)
 
-    @current_directory = Dir.pwd
+     @current_directory = Dir.pwd
+		 inuput_dir = options.input_dir.gsub!('~',Dir.home)
     begin
-      @working_directory = Dir.chdir(options.input_dir)
+     @working_directory = Dir.chdir(options.input_dir)
     rescue Errno::ENOENT => err
-      puts "Error: #{err.message}"
+      puts "#{err.message}"
       exit 1
     end
 
     unless options.dir_recursive 
-      images = File.join("*.{jpg,jpeg,JPG}")
+      images = File.join("*.{jpg,jpeg,JPG,JPEG}")
       else
-      images = File.join("**", "*.{jpg,jpeg,JPG}") 
+      images = File.join("**", "*.{jpg,jpeg,JPG,JPEG}") 
     end
     @images_list = Dir.glob(images)
     puts "No photos in spedified directory: #{options.input_dir}" if @images_list.empty? 
@@ -177,9 +185,10 @@ class Photostat
       firstline = true
       images_list.each do |file|
         puts "Reading exif from #{file}" if options.verbose
-        image = Exif.new(file)
-        image.get_exif(file)
-        csv_file << image.exifdata.keys if firstline   #header
+        image = EXIFR::JPEG.new(file)
+        p image.exif[0]
+        p image.exif[0].keys
+        csv_file << image.exif.keys if firstline   #header
         csv_file << image.exifdata.values
         firstline = false
       end
