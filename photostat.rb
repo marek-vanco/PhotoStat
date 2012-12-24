@@ -43,7 +43,7 @@ rescue LoadError => error
 	abort "Please install gem install csv"
 end
 
-#require 'pp' # for debuging
+require 'pp' # for debuging
 
 
 VERSION =  "Photostat ver 0.2"
@@ -186,10 +186,9 @@ class Photostat
       images_list.each do |file|
         puts "Reading exif from #{file}" if options.verbose
         image = EXIFR::JPEG.new(file)
-        p image.exif[0]
-        p image.exif[0].keys
-        csv_file << image.exif.keys if firstline   #header
-        csv_file << image.exifdata.values
+        image=image.exif[0].to_hash
+        csv_file << image.keys if firstline   #header
+        csv_file << image.values
         firstline = false
       end
       csv_file.close
