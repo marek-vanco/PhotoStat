@@ -2,3 +2,8 @@ This is a script for creating a list of EXIF values from photos.
 You must specify output filename. This script will create a .csv file with EXIF values:
 
 This script is under GNU software licence.
+
+TODO: 
+- add value of autofocus
+- improve format of exposure bias (0/1)
+- 
