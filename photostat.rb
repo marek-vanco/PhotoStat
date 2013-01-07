@@ -78,8 +78,8 @@ class Photostat
         exif_formated[:metering_mode] = METTERING_MODES[exif.metering_mode] if exif.metering_mode
         exif_formated[:white_balance] = WHITE_BALANCES[exif.white_balance] if exif.white_balance
         exif_formated[:light_source] = LIGHT_SOURCES[exif.light_source] if exif.light_source
-				exif_formated[:orientation] = ORIENTATION[exif.orientation.to_i-1] if exif.orientation
-				return exif_formated
+        exif_formated[:orientation] = ORIENTATION[exif.orientation.to_i-1] if exif.orientation
+        return exif_formated
       else
         exif_formated = nil
       end #if
