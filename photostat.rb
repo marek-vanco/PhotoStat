@@ -45,14 +45,11 @@ end
 
 require 'pp' # for debuging
 
-
 VERSION =  "Photostat ver 0.2"
 DELIMITER = ","
 FIELDSEP = "\""
 
-
 class Photostat
-  attr_accessor :images_list, :output_filename, :working_direcotry, :current_directory, :options
 
   class Exif 
     METTERING_MODES = %w{unknown Average CenterWeightedAverage Spot Multispot Pattern Partial}
@@ -61,30 +58,30 @@ class Photostat
     WHITE_BALANCES = %w{AutoWB ManualWB}
     SUBJECT_DISTANCE_RANGES = %w{unknown Macro Close Distant}
     LIGHT_SOURCES = %w{unknown Daylight Fluorescent Tungsten Flash SunnyWeather CloudyWeather Shade DaylightFluorescent DaywhiteFluorescent CoolwhiteFluorescent WhiteFluorescent StandardLightA StandardLightB StandardLightC D55 D65 D75 D50 ISOstudioTungsten }
+    ORIENTATION = %w{TopLeft TopRight BottomRigth BottomLeft LeftTop RightTop RightBottom LeftBottom}
 
-    attr_accessor :exifdata
-    attr_accessor :image_filename
-   
     def get_exif(file)
-      @exifdata = Hash.new
+      exif_formated = Hash.new
       exif = EXIFR::JPEG.new(file)
       if exif.exif? 
-        @exifdata[:file] = file
-        @exifdata[:date] = exif.date_time_original.strftime("%d.%m.%Y") if exif.date_time_original
-        @exifdata[:time] = exif.date_time_original.strftime("%k:%M") if exif.date_time_original
-        @exifdata[:manufactor] = exif.make
-        @exifdata[:model] = exif.model 
-        @exifdata[:exposure_program] = EXPOSURE_PROGRAMS[exif.exposure_program] if exif.exposure_program
-        @exifdata[:f_number] = exif.f_number.to_f
-        @exifdata[:exposure_time] = exif.exposure_time.to_s 
-        @exifdata[:exposure_bias] = exif.exposure_bias_value
-        @exifdata[:iso] = exif.iso_speed_ratings
-        @exifdata[:focal_lenght_35eq] = exif.focal_length_in_35mm_film
-        @exifdata[:metering_mode] = METTERING_MODES[exif.metering_mode] if exif.metering_mode
-        @exifdata[:white_balance] = WHITE_BALANCES[exif.white_balance] if exif.white_balance
-        @exifdata[:light_source] = LIGHT_SOURCES[exif.light_source] if exif.light_source
+        exif_formated[:file] = file
+        exif_formated[:date] = exif.date_time_original.strftime("%d.%m.%Y") if exif.date_time_original
+        exif_formated[:time] = exif.date_time_original.strftime("%k:%M") if exif.date_time_original
+        exif_formated[:manufactor] = exif.make
+        exif_formated[:model] = exif.model 
+        exif_formated[:exposure_program] = EXPOSURE_PROGRAMS[exif.exposure_program] if exif.exposure_program
+        exif_formated[:f_number] = exif.f_number.to_f
+        exif_formated[:exposure_time] = exif.exposure_time.to_s 
+        exif_formated[:exposure_bias] = exif.exposure_bias_value
+        exif_formated[:iso] = exif.iso_speed_ratings
+        exif_formated[:focal_lenght_35eq] = exif.focal_length_in_35mm_film
+        exif_formated[:metering_mode] = METTERING_MODES[exif.metering_mode] if exif.metering_mode
+        exif_formated[:white_balance] = WHITE_BALANCES[exif.white_balance] if exif.white_balance
+        exif_formated[:light_source] = LIGHT_SOURCES[exif.light_source] if exif.light_source
+				exif_formated[:orientation] = ORIENTATION[exif.orientation.to_i-1] if exif.orientation
+				return exif_formated
       else
-        exifdata = nil
+        exif_formated = nil
       end #if
     end #end get_exif
   end # end class Exif 
@@ -142,17 +139,17 @@ class Photostat
         exit 1
       end
 
-     options
+     return options
 
     end #end parse
   end  # end class Options
 
   def initialize # Photostat 
-    @options = Options.parse(ARGV)
+    options = Options.parse(ARGV)
     @output_filename = File.expand_path(options.output_filename)
+    @current_directory = Dir.pwd
+		@verbose = options.verbose
 
-     @current_directory = Dir.pwd
-		 inuput_dir = options.input_dir.gsub!('~',Dir.home)
     begin
      @working_directory = Dir.chdir(options.input_dir)
     rescue Errno::ENOENT => err
@@ -170,25 +167,20 @@ class Photostat
   end
 
   def save_csv
-# Protection of hard overwrite of output filename
-#      if File.exist?(@output_filename) then
-#        puts "Filename exist: #{@output_filename}. Please select other filename"
-#        exit 1
-#      end
-
       begin
         csv_file = CSV.open(@output_filename, "wb", :col_sep => ',' ) 
       rescue Errno::EACCES => err 
         puts "ERROR: #{err.message}" 
         exit 1
       end
+
       firstline = true
-      images_list.each do |file|
-        puts "Reading exif from #{file}" if options.verbose
-        image = EXIFR::JPEG.new(file)
-        image=image.exif[0].to_hash
-        csv_file << image.keys if firstline   #header
-        csv_file << image.values
+      @images_list.each do |file|
+        puts "Reading exif from #{file}" if @verbose
+        image = Exif.new
+        exif = image.get_exif(file)
+        csv_file << exif.keys if firstline   #header
+        csv_file << exif.values
         firstline = false
       end
       csv_file.close
