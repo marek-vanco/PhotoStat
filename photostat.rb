@@ -43,8 +43,6 @@ rescue LoadError => error
 	abort "Please install gem install csv"
 end
 
-require 'pp' # for debuging
-
 VERSION =  "Photostat ver 0.2"
 DELIMITER = ","
 FIELDSEP = "\""
