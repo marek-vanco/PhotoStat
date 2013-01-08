@@ -43,7 +43,9 @@ rescue LoadError => error
 	abort "Please install gem install csv"
 end
 
-VERSION =  "Photostat ver 0.2"
+require 'pp' # for debuging 
+
+VERSION =  "Photostat ver 0.3"
 DELIMITER = ","
 FIELDSEP = "\""
 
@@ -56,7 +58,8 @@ class Photostat
     WHITE_BALANCES = %w{AutoWB ManualWB}
     SUBJECT_DISTANCE_RANGES = %w{unknown Macro Close Distant}
     LIGHT_SOURCES = %w{unknown Daylight Fluorescent Tungsten Flash SunnyWeather CloudyWeather Shade DaylightFluorescent DaywhiteFluorescent CoolwhiteFluorescent WhiteFluorescent StandardLightA StandardLightB StandardLightC D55 D65 D75 D50 ISOstudioTungsten }
-    ORIENTATION = %w{TopLeft TopRight BottomRigth BottomLeft LeftTop RightTop RightBottom LeftBottom}
+    ORIENTATION = %w{TopLeft TopRight BottomRigth BottomLeft LeftTop RightTop RightBottom LeftBottom} # todo verify values
+		COLOR_SPACE = %w{AdobeRGB sRGB RAW} # todo: verify values
 
     def get_exif(file)
       exif_formated = Hash.new
@@ -77,6 +80,8 @@ class Photostat
         exif_formated[:white_balance] = WHITE_BALANCES[exif.white_balance] if exif.white_balance
         exif_formated[:light_source] = LIGHT_SOURCES[exif.light_source] if exif.light_source
         exif_formated[:orientation] = ORIENTATION[exif.orientation.to_i-1] if exif.orientation
+        exif_formated[:color_space] = COLOR_SPACE[exif.color_space] if exif.color_space
+        exif_formated[:user_comment] = exif.user_comment if exif.user_comment
         return exif_formated
       else
         exif_formated = nil
