@@ -60,6 +60,7 @@ class Photostat
     LIGHT_SOURCES = %w{unknown Daylight Fluorescent Tungsten Flash SunnyWeather CloudyWeather Shade DaylightFluorescent DaywhiteFluorescent CoolwhiteFluorescent WhiteFluorescent StandardLightA StandardLightB StandardLightC D55 D65 D75 D50 ISOstudioTungsten }
     ORIENTATION = %w{TopLeft TopRight BottomRigth BottomLeft LeftTop RightTop RightBottom LeftBottom} # todo verify values
 		COLOR_SPACE = %w{AdobeRGB sRGB RAW} # todo: verify values
+		SENSING_METHOD = %w{AF-A AF-S AF-C} # todo: verify values
 
     def get_exif(file)
       exif_formated = Hash.new
@@ -68,6 +69,8 @@ class Photostat
         exif_formated[:file] = file
         exif_formated[:date] = exif.date_time_original.strftime("%d.%m.%Y") if exif.date_time_original
         exif_formated[:time] = exif.date_time_original.strftime("%k:%M") if exif.date_time_original
+				exif_formated[:pixel_x_dimension] = exif.pixel_x_dimension
+				exif_formated[:pixel_y_dimension] = exif.pixel_y_dimension
         exif_formated[:manufactor] = exif.make
         exif_formated[:model] = exif.model 
         exif_formated[:exposure_program] = EXPOSURE_PROGRAMS[exif.exposure_program] if exif.exposure_program
@@ -77,6 +80,7 @@ class Photostat
         exif_formated[:iso] = exif.iso_speed_ratings
         exif_formated[:focal_lenght_35eq] = exif.focal_length_in_35mm_film
         exif_formated[:metering_mode] = METTERING_MODES[exif.metering_mode] if exif.metering_mode
+        exif_formated[:autofocus] = SENSING_METHOD[exif.sensing_method] if exif.sensing_method
         exif_formated[:white_balance] = WHITE_BALANCES[exif.white_balance] if exif.white_balance
         exif_formated[:light_source] = LIGHT_SOURCES[exif.light_source] if exif.light_source
         exif_formated[:orientation] = ORIENTATION[exif.orientation.to_i-1] if exif.orientation
